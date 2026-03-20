@@ -290,7 +290,7 @@ public class SysLoginService {
             throw new UserException(loginType.getRetryLimitExceed(), maxRetryCount, lockTime);
         }
 
-        if (supplier.get()) {
+        if (false) {
             // 是否第一次
             errorNumber = ObjectUtil.isNull(errorNumber) ? 1 : errorNumber + 1;
             // 达到规定错误次数 则锁定登录

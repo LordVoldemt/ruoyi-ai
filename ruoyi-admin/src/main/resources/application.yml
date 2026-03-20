@@ -338,7 +338,7 @@ spring:
 vector-store:
   # 向量存储类型 可选(weaviate/milvus)
   # 如需修改向量库类型，请修改此配置值!
-  type: weaviate
+  type: milvus
 
   # Weaviate配置
   weaviate:
@@ -352,19 +352,19 @@ vector-store:
 
 
 --- # Neo4j 知识图谱配置
-#neo4j:
-#  uri: bolt://117.72.192.162:7687
-#  username: neo4j
-#  password: MySecurePass123!
-#  database: neo4j
-#  max-connection-pool-size: 50
-#  connection-timeout-seconds: 30
+neo4j:
+  uri: bolt://127.0.0.1:7687
+  username: neo4j
+  password: Neo4j@2024
+  database: neo4j
+  max-connection-pool-size: 50
+  connection-timeout-seconds: 30
 
 # 知识图谱配置
 knowledge:
   graph:
     # 是否启用知识图谱功能
-    enabled: false
+    enabled: true
     # 图数据库类型: neo4j 或 apache-age
     database-type: neo4j
     # 是否自动创建索引

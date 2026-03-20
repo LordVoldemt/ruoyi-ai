@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.util.List;
 
+
 /**
  * 保存向量所需参数
  *

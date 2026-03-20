@@ -1,0 +1,77 @@
+services:
+  # Milvus 核心服务（standalone 单机版，适配 2.6.4 SDK）
+  milvus-standalone:
+    command: ["milvus", "run", "standalone"]
+    image: milvusdb/milvus:v2.4.13  # 与 2.6.4 SDK 完全兼容
+    ports:
+      - 19530:19530
+      - 9091:9091
+    volumes:
+      - milvus_data:/var/lib/milvus
+    environment:
+      ETCD_ENDPOINTS: milvus-etcd:2379
+      MINIO_ADDRESS: milvus-minio:9000
+      PULSAR_ADDRESS: pulsar://milvus-pulsar:6650
+      MILVUS_SERVICE_PORT: 19530
+      AUTHZ_ENABLED: 'false'
+      LOG_LEVEL: info
+      COMMON_STORAGE_TYPE: minio
+      QUERY_NODE_SEARCH_DELAY_ENABLED: 'false'
+    depends_on:
+      - milvus-etcd
+      - milvus-minio
+      - milvus-pulsar
+    networks:
+      - milvus-network
+    restart: unless-stopped
+
+  # Etcd：适配 Milvus 2.4.13 的稳定版本
+  milvus-etcd:
+    image: quay.io/coreos/etcd:v3.5.8
+    command:
+      - etcd
+      - --advertise-client-urls=http://0.0.0.0:2379
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --data-dir=/etcd-data
+      - --quota-backend-bytes=4294967296
+    volumes:
+      - milvus_etcd:/etcd-data
+    networks:
+      - milvus-network
+    restart: unless-stopped
+
+  # MinIO：修复版本（Milvus 官方推荐，可正常拉取）
+  milvus-minio:
+    image: minio/minio:RELEASE.2023-03-20T20-16-18Z  # 关键修复：替换为可拉取的版本
+    command: ["server", "/minio-data", "--console-address", ":9001"]
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: milvus-bucket
+    volumes:
+      - milvus_minio:/minio-data
+    networks:
+      - milvus-network
+    restart: unless-stopped
+
+  # Pulsar：适配 Milvus 2.4.13 的版本
+  milvus-pulsar:
+    image: apachepulsar/pulsar:2.11.3
+    command: ["bin/pulsar", "standalone", "--no-functions-worker", "--no-stream-storage"]
+    environment:
+      PULSAR_MEM: "-Xms512m -Xmx1024m"
+    volumes:
+      - milvus_pulsar:/pulsar-data
+    networks:
+      - milvus-network
+    restart: unless-stopped
+
+volumes:
+  milvus_data:
+  milvus_etcd:
+  milvus_minio:
+  milvus_pulsar:
+
+networks:
+  milvus-network:
+    driver: bridge
