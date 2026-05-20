@@ -355,7 +355,7 @@ vector-store:
 neo4j:
   uri: bolt://127.0.0.1:7687
   username: neo4j
-  password: Neo4j@2024
+  password: your_password
   database: neo4j
   max-connection-pool-size: 50
   connection-timeout-seconds: 30

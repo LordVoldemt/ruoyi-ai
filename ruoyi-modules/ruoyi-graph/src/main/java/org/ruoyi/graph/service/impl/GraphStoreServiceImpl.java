@@ -520,20 +520,52 @@ public class GraphStoreServiceImpl implements IGraphStoreService {
 
     @Override
     public boolean createGraphSchema(String graphUuid) {
+        // 使用 try-with-resources 自动关闭 Neo4j Session
         try (Session session = neo4jDriver.session()) {
-            // 创建索引以提高查询性能 - 使用正确的Neo4j 4.x/5.x语法
+
+            // =========================
+            // 1️⃣ 创建节点（Entity）索引
+            // =========================
+
+            // 在 Entity 节点的 id 属性上创建索引
+            // 作用：提高通过 id 查询节点的性能
             session.run("CREATE INDEX entity_id_index IF NOT EXISTS FOR (n:Entity) ON (n.id)");
+
+            // 在 knowledgeId 属性上创建索引
+            // 作用：按知识库ID过滤实体时更快（常用于多图谱隔离）
             session.run("CREATE INDEX entity_knowledge_id_index IF NOT EXISTS FOR (n:Entity) ON (n.knowledgeId)");
+
+            // 在 name 属性上创建索引
+            // 作用：支持按名称搜索实体（例如全文检索前置优化）
             session.run("CREATE INDEX entity_name_index IF NOT EXISTS FOR (n:Entity) ON (n.name)");
 
-            // 为关系也创建索引
+            // =========================
+            // 2️⃣ 创建关系（RELATION）索引
+            // =========================
+
+            // 在关系的 id 属性上创建索引
+            // ()-[r:RELATION]-() 表示匹配所有 RELATION 类型的关系
+            // 作用：快速通过关系ID定位某条关系
             session.run("CREATE INDEX relation_id_index IF NOT EXISTS FOR ()-[r:RELATION]-() ON (r.id)");
+
+            // 在关系的 type 属性上创建索引
+            // 作用：按关系类型筛选（例如：朋友、属于、包含等）
             session.run("CREATE INDEX relation_type_index IF NOT EXISTS FOR ()-[r:RELATION]-() ON (r.type)");
 
+            // =========================
+            // 3️⃣ 日志记录
+            // =========================
+
+            // 创建成功日志
             log.info("图谱Schema创建成功: graphUuid={}", graphUuid);
+
             return true;
+
         } catch (Exception e) {
+
+            // 创建失败日志（打印异常堆栈）
             log.error("创建图谱Schema失败: graphUuid={}", graphUuid, e);
+
             return false;
         }
     }
